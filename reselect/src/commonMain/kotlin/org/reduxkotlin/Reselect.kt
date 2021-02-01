@@ -202,13 +202,14 @@ class SelectorBuilder<S : Any> {
  *          }
  *      }
  */
-fun <State : Any> Store<State>.selectors(selectorSubscriberBuilderInit: SelectorSubscriberBuilder<State>.() -> Unit): StoreSubscriber {
-    val subscriberBuilder: SelectorSubscriberBuilder<State> = SelectorSubscriberBuilder(this)
+fun <State : Any, Selection: Any> Store<State>.selectors(selectorSubscriberBuilderInit: SelectorSubscriberBuilder<State, Selection>.() -> Unit): StoreSubscriber {
+    val subscriberBuilder: SelectorSubscriberBuilder<State, Selection> = SelectorSubscriberBuilder(this)
     subscriberBuilder.selectorSubscriberBuilderInit()
     val sub = {
         subscriberBuilder.selectorList.forEach { entry ->
-            @Suppress("UNCHECKED_CAST")
-            (entry.key as Selector<State, *>).onChangeIn(getState()) { entry.value(getState()) }
+            entry.key.onChangeIn(getState()) {
+                entry.value(it)
+            }
         }
         subscriberBuilder.withAnyChangeFun?.invoke()
         Unit
@@ -218,10 +219,8 @@ fun <State : Any> Store<State>.selectors(selectorSubscriberBuilderInit: Selector
     return this.subscribe(sub)
 }
 
-fun <State : Any> Store<State>.select(selector: (State) -> Any, action: (Any) -> Unit): StoreSubscriber {
-    return subscribe(
-        this.selectors {
-            select(selector, action)
-        }
-    )
+fun <State : Any, Selection : Any> Store<State>.select(selector: (State) -> Selection, action: (Selection) -> Unit): StoreSubscriber {
+    return this.selectors<State, Selection> {
+        select(selector, action)
+    }
 }

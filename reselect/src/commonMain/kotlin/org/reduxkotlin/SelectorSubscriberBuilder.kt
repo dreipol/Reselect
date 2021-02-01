@@ -7,9 +7,9 @@ package org.reduxkotlin
  * @property store The redux store
  * @constructor creates an empty SelectorSubscriberBuilder
  */
-class SelectorSubscriberBuilder<State : Any>(val store: Store<State>) {
+class SelectorSubscriberBuilder<State : Any, Selection: Any>(val store: Store<State>) {
 
-    val selectorList = mutableMapOf<Selector<State, Any>, (Any) -> Unit>()
+    val selectorList = mutableMapOf<Selector<State, Selection>, (Selection) -> Unit>()
 
     // state is here to make available to lambda with receiver in DSL
     val state: State
@@ -21,7 +21,7 @@ class SelectorSubscriberBuilder<State : Any>(val store: Store<State>) {
         withAnyChangeFun = f
     }
 
-    fun select(selector: (State) -> Any, action: (Any) -> Unit) {
+    fun select(selector: (State) -> Selection, action: (Selection) -> Unit) {
         val selBuilder = SelectorBuilder<State>()
         val sel = selBuilder.withSingleField(selector)
         selectorList[sel] = action
